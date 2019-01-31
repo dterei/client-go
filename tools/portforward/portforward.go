@@ -184,12 +184,20 @@ func (pf *PortForwarder) forward() error {
 // listenOnPort delegates tcp4 and tcp6 listener creation and waits for connections on both of these addresses.
 // If both listener creation fail, an error is raised.
 func (pf *PortForwarder) listenOnPort(port *ForwardedPort) error {
-	errTcp4 := pf.listenOnPortAndAddress(port, "tcp4", "127.0.0.1")
-	errTcp6 := pf.listenOnPortAndAddress(port, "tcp6", "::1")
-	if errTcp4 != nil && errTcp6 != nil {
-		return fmt.Errorf("All listeners failed to create with the following errors: %s, %s", errTcp4, errTcp6)
+	// (Fix for RUBRIK): bind IPv4 only and to local IP instead of 127.0.0.1
+	errTcp4 := pf.listenOnPortAndAddress(port, "tcp4", "")
+	if errTcp4 != nil {
+		return fmt.Errorf("All listeners failed to create with the following errors: %s", errTcp4)
 	}
 	return nil
+
+	// # ORIGINAL CODE
+	// errTcp4 := pf.listenOnPortAndAddress(port, "tcp4", "127.0.0.1")
+	// errTcp6 := pf.listenOnPortAndAddress(port, "tcp6", "::1")
+	// if errTcp4 != nil && errTcp6 != nil {
+	// 	return fmt.Errorf("All listeners failed to create with the following errors: %s, %s", errTcp4, errTcp6)
+	// }
+	// return nil
 }
 
 // listenOnPortAndAddress delegates listener creation and waits for new connections
